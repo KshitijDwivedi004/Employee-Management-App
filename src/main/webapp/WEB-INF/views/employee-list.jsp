@@ -1,84 +1,138 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="jakarta.tags.core" %>
 <%@ taglib prefix="fmt" uri="jakarta.tags.fmt" %>
 <%@ include file="fragments/header.jsp" %>
 
-<div class="container">
+<div class="container mt-4">
 
-    <!-- Flash messages (will be wired in Phase 3) -->
+    <!-- Flash messages -->
     <c:if test="${not empty successMessage}">
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i>${successMessage}
+        <div class="alert alert-success alert-dismissible fade show animate-fade-in" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                <strong>Success!</strong>&nbsp;${successMessage}
+            </div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     </c:if>
 
-    <!-- Page header + search -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0 fw-semibold">
-            <i class="bi bi-table me-2 text-primary"></i>All Employees
-        </h5>
-        <input type="text" id="searchInput" class="form-control search-box"
-               placeholder="Search by name or department…">
-    </div>
-
-    <!-- Employee table -->
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-hover table-bordered mb-0" id="employeeTable">
-                <thead class="table-primary">
-                    <tr>
-                        <th>#</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Department</th>
-                        <th>Salary (₹)</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <c:choose>
-                        <c:when test="${empty employees}">
-                            <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
-                                    <i class="bi bi-inbox fs-4 d-block mb-1"></i>
-                                    No employees found. <a href="/employees/new">Add one?</a>
-                                </td>
-                            </tr>
-                        </c:when>
-                        <c:otherwise>
-                            <c:forEach var="emp" items="${employees}" varStatus="loop">
-                                <tr>
-                                    <td>${loop.count}</td>
-                                    <td>${emp.name}</td>
-                                    <td>${emp.email}</td>
-                                    <td><span class="badge-dept">${emp.department}</span></td>
-                                    <td>
-                                        <fmt:formatNumber value="${emp.salary}"
-                                                          type="number" minFractionDigits="2"/>
-                                    </td>
-                                    <td class="text-center">
-                                        <a href="/employees/edit/${emp.id}"
-                                           class="btn btn-warning btn-sm me-1">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
-                                        <a href="/employees/delete/${emp.id}"
-                                           class="btn btn-danger btn-sm"
-                                           onclick="return confirm('Delete ${emp.name}?')">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                            </c:forEach>
-                        </c:otherwise>
-                    </c:choose>
-                </tbody>
-            </table>
+    <!-- Page header with controls -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <h3 class="fw-bold mb-0">
+                <i class="bi bi-people me-2 text-primary"></i>Employee Directory
+            </h3>
+        </div>
+        <div class="col-md-6 d-flex gap-2 justify-content-end">
+            <div class="search-wrapper" style="flex: 1; max-width: 350px;">
+                <div class="input-group search-input-group">
+                    <span class="input-group-text search-icon">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control search-input"
+                           placeholder="Search by name, email, or department…"
+                           autocomplete="off">
+                    <button class="btn btn-search-clear clear-search" id="clearBtn" 
+                            style="display: none;" type="button" title="Clear search">
+                        <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                </div>
+                <div id="searchStatus" class="small mt-2 search-status-text" style="display: none;"></div>
+            </div>
         </div>
     </div>
 
-    <p class="text-muted mt-2 small">
-        Showing <strong>${employees.size()}</strong> employee(s)
-    </p>
+    <!-- Loading spinner -->
+    <div id="loadingSpinner" class="d-none" style="text-align: center; padding: 20px;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Searching...</span>
+        </div>
+        <p class="mt-2 text-muted">Searching employees...</p>
+    </div>
+
+    <!-- Employee count and controls -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <p class="mb-0 text-muted">
+            <strong id="resultCount">0</strong> employee(s) found
+        </p>
+        <a href="/employees/new" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-circle me-1"></i>Add New Employee
+        </a>
+    </div>
+
+    <!-- Employee table card -->
+    <div class="card shadow-sm border-0 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0" id="employeeTable">
+                    <thead class="table-light sticky-top">
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 20%">Name</th>
+                            <th style="width: 20%">Email</th>
+                            <th style="width: 18%">Department</th>
+                            <th style="width: 17%; text-align: right;">Salary (&#8377;)</th>
+                            <th style="width: 20%; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <c:choose>
+                            <c:when test="${empty employees}">
+                                <tr class="empty-state">
+                                    <td colspan="6" class="text-center py-5">
+                                        <i class="bi bi-inbox fs-1 text-muted d-block mb-3"></i>
+                                        <h5 class="text-muted">No Employees Yet</h5>
+                                        <p class="text-muted small">Get started by adding your first employee</p>
+                                        <a href="/employees/new" class="btn btn-primary btn-sm mt-2">
+                                            <i class="bi bi-person-plus me-1"></i>Add Employee
+                                        </a>
+                                    </td>
+                                </tr>
+                            </c:when>
+                            <c:otherwise>
+                                <c:forEach var="emp" items="${employees}" varStatus="loop">
+                                    <tr class="table-row-animate" data-emp-id="${emp.id}">
+                                        <td><small class="text-muted">${loop.count}</small></td>
+                                        <td>
+                                            <div class="fw-semibold text-dark">${emp.name}</div>
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">${emp.email}</small>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info bg-opacity-10 text-info mx-1" 
+                                                  style="font-weight: 500; padding: 6px 12px;">${emp.department}</span>
+                                        </td>
+                                        <td style="text-align: right;">
+                                            <span class="fw-semibold text-success">
+                                                &#8377;<fmt:formatNumber value="${emp.salary}"
+                                                                  type="number" minFractionDigits="2" maxFractionDigits="2"/>
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm" role="group">
+                                                <a href="/employees/edit/${emp.id}"
+                                                   class="btn btn-outline-primary action-btn edit-btn"
+                                                   title="Edit ${emp.name}">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <button onclick="deleteEmployee(${emp.id}, '${emp.name}')"
+                                                        class="btn btn-outline-danger action-btn delete-btn"
+                                                        title="Delete ${emp.name}">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </c:forEach>
+                            </c:otherwise>
+                        </c:choose>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!-- jQuery CDN -->
@@ -87,57 +141,312 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-    /**
-     * Live search — fires on every keystroke with a 300ms debounce.
-     * Calls GET /employees/search?keyword=... and re-renders the tbody.
-     * Full implementation with proper row templating will be in Phase 4.
-     */
     let searchTimer;
+    let allEmployees = [];
+    
+    // Initialize with all employees
+    function initializeEmployees() {
+        const tbody = $('#employeeTable tbody');
+        tbody.find('tr.table-row-animate').each(function() {
+            const row = $(this);
+            allEmployees.push({
+                id: row.data('emp-id'),
+                name: row.find('td').eq(1).text().trim(),
+                email: row.find('td').eq(2).text().trim(),
+                department: row.find('td').eq(3).text().trim(),
+                salary: row.find('td').eq(4).text().trim()
+            });
+        });
+        updateResultCount();
+    }
+
+    // Update result counter
+    function updateResultCount() {
+        const rows = $('#employeeTable tbody tr:not(.empty-state)').length;
+        $('#resultCount').text(rows);
+    }
+
+    // Search functionality with debouncing
     $('#searchInput').on('keyup', function () {
         clearTimeout(searchTimer);
         const keyword = $(this).val().trim();
-
-        if (keyword.length < 2) {
-            location.reload();
+        
+        // Show/hide clear button
+        if (keyword.length > 0) {
+            $('#clearBtn').show();
+        } else {
+            $('#clearBtn').hide();
+            resetTable();
             return;
         }
 
-        searchTimer = setTimeout(function () {
-            $.getJSON('/employees/search', { keyword: keyword }, function (data) {
-                const tbody = $('#employeeTable tbody');
-                tbody.empty();
+        // Show loading spinner
+        if (keyword.length >= 2) {
+            $('#loadingSpinner').removeClass('d-none');
+            $('#searchStatus').html('<i class="bi bi-hourglass-split me-1 animate-spin"></i>Searching...').show();
 
-                if (data.length === 0) {
-                    tbody.append(
-                        '<tr><td colspan="6" class="text-center text-muted py-3">' +
-                        '<i class="bi bi-search me-1"></i>No results for "' + keyword + '"' +
-                        '</td></tr>'
-                    );
-                    return;
-                }
-
-                data.forEach(function (emp, index) {
-                    tbody.append(
-                        '<tr>' +
-                        '<td>' + (index + 1) + '</td>' +
-                        '<td>' + emp.name + '</td>' +
-                        '<td>' + emp.email + '</td>' +
-                        '<td><span class="badge-dept">' + emp.department + '</span></td>' +
-                        '<td>' + parseFloat(emp.salary).toFixed(2) + '</td>' +
-                        '<td class="text-center">' +
-                          '<a href="/employees/edit/' + emp.id + '" class="btn btn-warning btn-sm me-1">' +
-                            '<i class="bi bi-pencil-fill"></i></a>' +
-                          '<a href="/employees/delete/' + emp.id + '" class="btn btn-danger btn-sm" ' +
-                            'onclick="return confirm(\'Delete ' + emp.name + '?\')">' +
-                            '<i class="bi bi-trash-fill"></i></a>' +
-                        '</td>' +
-                        '</tr>'
-                    );
+            searchTimer = setTimeout(function () {
+                $.ajax({
+                    url: '/employees/search',
+                    type: 'GET',
+                    data: { keyword: keyword },
+                    dataType: 'json',
+                    success: function (data) {
+                        $('#loadingSpinner').addClass('d-none');
+                        displaySearchResults(data, keyword);
+                    },
+                    error: function (xhr, status, error) {
+                        $('#loadingSpinner').addClass('d-none');
+                        $('#searchStatus').html('<i class="bi bi-exclamation-triangle"></i> Error: Could not complete search').addClass('text-danger').show();
+                        console.error('Search error:', error);
+                    }
                 });
+            }, 300);
+        }
+    });
+
+    // Clear search
+    $('#clearBtn').on('click', function() {
+        $('#searchInput').val('').focus();
+        $('#searchStatus').hide();
+        $('#clearBtn').hide();
+        resetTable();
+        updateResultCount();
+    });
+
+    // Display search results
+    function displaySearchResults(data, keyword) {
+        const tbody = $('#employeeTable tbody');
+        tbody.empty();
+
+        if (data.length === 0) {
+            tbody.append(
+                '<tr class="empty-state">' +
+                '<td colspan="6" class="text-center py-5">' +
+                '<i class="bi bi-search fs-1 text-muted d-block mb-3"></i>' +
+                '<h5 class="text-muted">No Results Found</h5>' +
+                '<p class="text-muted small">No employees match "<strong>' + escapeHtml(keyword) + '</strong>"</p>' +
+                '</td>' +
+                '</tr>'
+            );
+            $('#searchStatus').html('<i class="bi bi-info-circle me-1"></i>0 results for this search').removeClass('text-danger').show();
+        } else {
+            data.forEach(function (emp, index) {
+                tbody.append(
+                    '<tr class="table-row-animate" data-emp-id="' + emp.id + '">' +
+                    '<td><small class="text-muted">' + (index + 1) + '</small></td>' +
+                    '<td><div class="fw-semibold text-dark">' + escapeHtml(emp.name) + '</div></td>' +
+                    '<td><small class="text-muted">' + escapeHtml(emp.email) + '</small></td>' +
+                    '<td><span class="badge bg-info bg-opacity-10 text-info mx-1" style="font-weight: 500; padding: 6px 12px;">' + escapeHtml(emp.department) + '</span></td>' +
+                    '<td style="text-align: right;"><span class="fw-semibold text-success">&#8377;' + parseFloat(emp.salary).toLocaleString('en-IN', {minimumFractionDigits: 2}) + '</span></td>' +
+                    '<td class="text-center">' +
+                    '<div class="btn-group btn-group-sm" role="group">' +
+                    '<a href="/employees/edit/' + emp.id + '" class="btn btn-outline-primary action-btn edit-btn">' +
+                    '<i class="bi bi-pencil"></i></a>' +
+                    '<button onclick="deleteEmployee(' + emp.id + ', \'' + escapeHtml(emp.name) + '\')" class="btn btn-outline-danger action-btn delete-btn">' +
+                    '<i class="bi bi-trash"></i></button>' +
+                    '</div>' +
+                    '</td>' +
+                    '</tr>'
+                );
             });
-        }, 300);
+            $('#searchStatus').html('<i class="bi bi-check-circle me-1"></i>' + data.length + ' result(s) found').removeClass('text-danger').show();
+        }
+        updateResultCount();
+    }
+
+    // Reset table to show all employees
+    function resetTable() {
+        location.reload();
+    }
+
+    // Delete employee with confirmation modal
+    function deleteEmployee(id, name) {
+        if (confirm('Are you sure you want to delete ' + escapeHtml(name) + '?\n\nThis action cannot be undone.')) {
+            window.location.href = '/employees/delete/' + id;
+        }
+    }
+
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const map = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#039;'
+        };
+        return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+
+    // Initialize on page load
+    $(document).ready(function() {
+        initializeEmployees();
+        
+        // Auto-dismiss alerts after 3 seconds
+        $('.alert').each(function() {
+            const alert = new bootstrap.Alert(this);
+            setTimeout(function() {
+                alert.close();
+            }, 3000);
+        });
     });
 </script>
+
+<style>
+    /* Animations */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-spin {
+        animation: spin 2s linear infinite;
+    }
+
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    .table-row-animate {
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    /* Search styling */
+    .search-wrapper {
+        position: relative;
+    }
+
+    .search-input-group {
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+        transition: all 0.3s ease;
+        border: 2px solid transparent;
+        overflow: hidden;
+        background: white;
+    }
+
+    .search-input-group:focus-within {
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        border-color: #667eea;
+        transform: translateY(-2px);
+    }
+
+    .search-icon {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 10px 16px;
+    }
+
+    .search-input {
+        border: none !important;
+        border-left: none !important;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #2c3e50;
+        padding: 10px 16px;
+        background: white;
+    }
+
+    .search-input::placeholder {
+        color: #95a5a6;
+        font-weight: 400;
+    }
+
+    .search-input:focus {
+        background: white;
+        color: #2c3e50;
+        box-shadow: none;
+    }
+
+    .btn-search-clear {
+        border: none;
+        background: white;
+        color: #667eea;
+        padding: 10px 14px;
+        transition: all 0.2s ease;
+        font-size: 1rem;
+    }
+
+    .btn-search-clear:hover {
+        background: #f0f2f7;
+        color: #764ba2;
+        transform: rotate(90deg);
+    }
+
+    .btn-search-clear:active {
+        transform: rotate(90deg) scale(0.95);
+    }
+
+    .search-status-text {
+        color: #667eea;
+        font-weight: 500;
+        margin-top: 0.5rem !important;
+    }
+
+    .search-status-text.text-danger {
+        color: #e74c3c !important;
+    }
+
+    /* Table improvements */
+    .table-responsive {
+        border-radius: 8px;
+    }
+
+    .action-btn {
+        transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .edit-btn:hover {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: white;
+    }
+
+    .delete-btn:hover {
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }
+
+    .empty-state {
+        background-color: #f8f9fa;
+    }
+
+    /* Badge styling */
+    .badge {
+        font-size: 0.85rem;
+        border-radius: 6px;
+    }
+
+    /* Sticky header */
+    .sticky-top {
+        background-color: #f8f9fa;
+        border-bottom: 2px solid #dee2e6;
+    }
+</style>
 
 </body>
 </html>
