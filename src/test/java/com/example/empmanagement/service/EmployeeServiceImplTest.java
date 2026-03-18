@@ -12,6 +12,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.math.BigDecimal;
@@ -76,6 +78,23 @@ class EmployeeServiceImplTest {
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getName()).isEqualTo("Arjun Sharma");
         then(employeeRepository).should().findAll(any(Sort.class));
+    }
+
+    // ----------------------------------------------------------------
+    // getEmployeesPage
+    // ----------------------------------------------------------------
+
+    @Test
+    @DisplayName("getEmployeesPage returns a paged result from repository")
+    void getEmployeesPage_returnsPagedResult() {
+        given(employeeRepository.findAll(any(Pageable.class)))
+                .willReturn(new PageImpl<>(List.of(sampleEmployee)));
+
+        var result = employeeService.getEmployeesPage(0, 10);
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0).getName()).isEqualTo("Arjun Sharma");
+        then(employeeRepository).should().findAll(any(Pageable.class));
     }
 
     // ----------------------------------------------------------------

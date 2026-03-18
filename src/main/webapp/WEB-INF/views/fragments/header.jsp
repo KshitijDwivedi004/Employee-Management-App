@@ -159,6 +159,23 @@
             color: white;
         }
 
+        /* Action buttons in employee table */
+        .action-btn-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.4rem 0.7rem;
+            margin: 0;
+            line-height: 1;
+            min-width: 2.35rem;
+        }
+
         /* Alert improvements */
         .alert {
             border: none;
@@ -283,6 +300,15 @@
             .btn-sm {
                 padding: 0.35rem 0.65rem;
                 font-size: 0.8rem;
+            }
+
+            .action-btn-wrap {
+                gap: 0.35rem;
+            }
+
+            .action-btn {
+                padding: 0.35rem 0.6rem;
+                min-width: 2.1rem;
             }
 
             .table {

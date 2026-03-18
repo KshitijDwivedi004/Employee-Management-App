@@ -7,6 +7,9 @@ import com.example.empmanagement.repository.EmployeeRepository;
 import com.example.empmanagement.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,18 +19,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-/**
- * Concrete implementation of EmployeeService.
- *
- * @Transactional at class level means every public method runs inside
- * a transaction. Read-only methods override this with readOnly=true,
- * which tells Hibernate to skip dirty-checking on the session — a
- * performance optimisation for queries that never modify data.
- *
- * @Slf4j (Lombok) injects a static `log` field backed by SLF4J.
- * @RequiredArgsConstructor (Lombok) generates a constructor for all
- * `final` fields — the Spring-recommended way to do constructor injection.
- */
 @Service
 @Transactional
 @Slf4j
@@ -40,7 +31,17 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Transactional(readOnly = true)
     public List<Employee> getAllEmployees() {
         log.debug("Fetching all employees sorted by name");
-        return employeeRepository.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        return employeeRepository.findAll(Sort.by(Sort.Direction.DESC, "updatedAt"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Employee> getEmployeesPage(int page, int size) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "updatedAt"));
+        log.debug("Fetching employee page {} with size {}", safePage, safeSize);
+        return employeeRepository.findAll(pageable);
     }
 
     @Override
@@ -111,15 +112,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         return employeeRepository.searchByKeyword(keyword.trim());
     }
 
-    // ------------------------------------------------------------------
-    // Private helpers
-    // ------------------------------------------------------------------
 
-    /**
-     * Maps EmployeeDTO fields onto an Employee entity.
-     * Using a target object (rather than creating a new one) preserves
-     * audit fields (createdAt) during updates — they are not in the DTO.
-     */
     private Employee mapToEntity(EmployeeDTO dto, Employee target) {
         target.setName(dto.getName().trim());
         target.setEmail(dto.getEmail().trim().toLowerCase());

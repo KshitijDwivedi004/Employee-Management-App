@@ -91,8 +91,9 @@
                             </c:when>
                             <c:otherwise>
                                 <c:forEach var="emp" items="${employees}" varStatus="loop">
+                                    <c:set var="rowNumber" value="${(currentPage * pageSize) + loop.index + 1}" />
                                     <tr class="table-row-animate" data-emp-id="${emp.id}">
-                                        <td><small class="text-muted">${loop.count}</small></td>
+                                        <td><small class="text-muted">${rowNumber}</small></td>
                                         <td>
                                             <div class="fw-semibold text-dark">${emp.name}</div>
                                         </td>
@@ -110,7 +111,7 @@
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <div class="btn-group btn-group-sm" role="group">
+                                            <div class="action-btn-wrap" role="group" aria-label="Employee actions">
                                                 <a href="/employees/${emp.id}/edit"
                                                    class="btn btn-outline-primary action-btn edit-btn"
                                                    title="Edit ${emp.name}">
@@ -135,6 +136,30 @@
             </div>
         </div>
     </div>
+
+    <c:if test="${totalPages > 1}">
+        <nav aria-label="Employee list pagination" id="paginationNav" class="mt-3 d-flex justify-content-center">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item ${hasPrevious ? '' : 'disabled'}">
+                    <a class="page-link" href="/employees?page=${currentPage - 1}&size=${pageSize}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+
+                <c:forEach var="pageIndex" begin="0" end="${totalPages - 1}">
+                    <li class="page-item ${pageIndex == currentPage ? 'active' : ''}">
+                        <a class="page-link" href="/employees?page=${pageIndex}&size=${pageSize}">${pageIndex + 1}</a>
+                    </li>
+                </c:forEach>
+
+                <li class="page-item ${hasNext ? '' : 'disabled'}">
+                    <a class="page-link" href="/employees?page=${currentPage + 1}&size=${pageSize}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </c:if>
 
 </div>
 
@@ -177,6 +202,7 @@
         // Show/hide clear button
         if (keyword.length > 0) {
             $('#clearBtn').show();
+            togglePagination(false);
         } else {
             $('#clearBtn').hide();
             resetTable();
@@ -243,7 +269,7 @@
                     '<td><span class="badge bg-info bg-opacity-10 text-info mx-1" style="font-weight: 500; padding: 6px 12px;">' + escapeHtml(emp.department) + '</span></td>' +
                     '<td style="text-align: right;"><span class="fw-semibold text-success">&#8377;' + parseFloat(emp.salary).toLocaleString('en-IN', {minimumFractionDigits: 2}) + '</span></td>' +
                     '<td class="text-center">' +
-                    '<div class="btn-group btn-group-sm" role="group">' +
+                    '<div class="action-btn-wrap" role="group" aria-label="Employee actions">' +
                     '<a href="/employees/' + emp.id + '/edit" class="btn btn-outline-primary action-btn edit-btn">' +
                     '<i class="bi bi-pencil"></i></a>' +
                     '<form action="/employees/' + emp.id + '" method="post" class="d-inline js-delete-form" data-employee-name="' + escapeHtml(emp.name) + '">' +
@@ -264,6 +290,18 @@
     // Reset table to show all employees
     function resetTable() {
         location.reload();
+    }
+
+    function togglePagination(show) {
+        const nav = $('#paginationNav');
+        if (!nav.length) {
+            return;
+        }
+        if (show) {
+            nav.show();
+        } else {
+            nav.hide();
+        }
     }
 
     // Confirm delete before submitting the form

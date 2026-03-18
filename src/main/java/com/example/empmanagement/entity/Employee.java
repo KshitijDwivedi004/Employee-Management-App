@@ -56,16 +56,11 @@ public class Employee {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal salary;
 
-    /**
-     * Automatically set by Hibernate on INSERT — never updated.
-     */
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * Automatically updated by Hibernate on every UPDATE.
-     */
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

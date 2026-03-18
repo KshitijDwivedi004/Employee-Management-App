@@ -4,14 +4,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-/**
- * Centralized exception handling for the MVC (JSP) layer.
- *
- * NOTE: @ControllerAdvice only intercepts exceptions thrown INSIDE
- * controller or service methods — not inside Servlet filters.
- * Filter-level exceptions (e.g. JWT errors) need to be handled
- * directly inside the filter with try-catch.
- */
+
 @ControllerAdvice
 public class GlobalExceptionHandler {
 

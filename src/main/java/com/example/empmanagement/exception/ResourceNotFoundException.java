@@ -3,14 +3,7 @@ package com.example.empmanagement.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-/**
- * Thrown by the service layer when an Employee with the requested ID
- * does not exist in the database.
- *
- * @ResponseStatus maps this exception to HTTP 404 automatically
- * when thrown from a @RestController method.
- * For @Controller (JSP) flows, GlobalExceptionHandler renders an error view.
- */
+
 @ResponseStatus(value = HttpStatus.NOT_FOUND)
 public class ResourceNotFoundException extends RuntimeException {
 

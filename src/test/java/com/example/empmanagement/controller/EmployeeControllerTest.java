@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -61,12 +62,15 @@ class EmployeeControllerTest {
     @Test
     @DisplayName("GET /employees returns 200 and employee-list view")
     void listEmployees_returns200() throws Exception {
-        given(employeeService.getAllEmployees()).willReturn(List.of(sampleEmployee));
+        given(employeeService.getEmployeesPage(0, 10))
+            .willReturn(new PageImpl<>(List.of(sampleEmployee)));
 
         mockMvc.perform(get("/employees"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("employee-list"))
-                .andExpect(model().attributeExists("employees"));
+            .andExpect(model().attributeExists("employees"))
+            .andExpect(model().attributeExists("currentPage"))
+            .andExpect(model().attributeExists("totalPages"));
     }
 
     // ----------------------------------------------------------------

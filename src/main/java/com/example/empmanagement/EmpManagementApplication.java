@@ -5,13 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 
-/**
- * Application entry point.
- *
- * Extends SpringBootServletInitializer so the app can be deployed as a WAR
- * to an external Tomcat, while still running with the embedded server via
- * `mvn spring-boot:run` during development.
- */
 @SpringBootApplication
 public class EmpManagementApplication extends SpringBootServletInitializer {
 

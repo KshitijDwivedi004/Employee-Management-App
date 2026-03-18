@@ -6,6 +6,7 @@ import com.example.empmanagement.service.EmployeeService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -14,22 +15,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
-/**
- * MVC Controller for all Employee operations.
- *
- * Dual role:
- *  - @Controller methods render JSP views (list, form, error pages)
- *  - @ResponseBody method returns JSON for the jQuery live-search AJAX call
- *
- * URL design:
- *  GET  /employees              → list all
- *  GET  /employees/new          → show blank add form
- *  POST /employees              → save new employee
- *  GET  /employees/{id}/edit    → show pre-filled edit form
- *  PUT  /employees/{id}         → apply update
- *  DELETE /employees/{id}       → delete and redirect
- *  GET  /employees/search       → JSON search for jQuery (REST)
- */
+
 @Controller
 @RequestMapping("/employees")
 @Slf4j
@@ -43,9 +29,20 @@ public class EmployeeController {
     // ----------------------------------------------------------------
 
     @GetMapping
-    public String listEmployees(Model model) {
-        log.debug("GET /employees");
-        model.addAttribute("employees", employeeService.getAllEmployees());
+    public String listEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Model model) {
+        log.debug("GET /employees?page={}&size={}", page, size);
+
+        Page<Employee> employeePage = employeeService.getEmployeesPage(page, size);
+        model.addAttribute("employees", employeePage.getContent());
+        model.addAttribute("currentPage", employeePage.getNumber());
+        model.addAttribute("totalPages", employeePage.getTotalPages());
+        model.addAttribute("pageSize", employeePage.getSize());
+        model.addAttribute("totalItems", employeePage.getTotalElements());
+        model.addAttribute("hasPrevious", employeePage.hasPrevious());
+        model.addAttribute("hasNext", employeePage.hasNext());
         return "employee-list";
     }
 
@@ -62,17 +59,6 @@ public class EmployeeController {
         return "employee-form";
     }
 
-    /**
-     * Handles form POST for a new employee.
-     *
-     * @Valid triggers Bean Validation on the DTO fields.
-     * BindingResult must immediately follow the @Valid parameter —
-     * if swapped, Spring throws an exception instead of populating errors.
-     *
-     * RedirectAttributes.addFlashAttribute() stores a one-time message
-     * in the session that survives the redirect and is available in the
-     * next request's model — then deleted automatically.
-     */
     @PostMapping
     public String saveEmployee(
             @Valid @ModelAttribute("employeeDTO") EmployeeDTO dto,
@@ -171,17 +157,7 @@ public class EmployeeController {
         return "redirect:/employees";
     }
 
-    // ----------------------------------------------------------------
-    // REST — jQuery live search (returns JSON, not a view)
-    // ----------------------------------------------------------------
 
-    /**
-     * Called by jQuery on every keystroke in the search box.
-     * Returns a JSON array of matching employees.
-     *
-     * @ResponseBody bypasses the view resolver and writes the return
-     * value directly to the HTTP response body via Jackson.
-     */
     @GetMapping("/search")
     @ResponseBody
     public List<Employee> searchEmployees(@RequestParam(defaultValue = "") String keyword) {

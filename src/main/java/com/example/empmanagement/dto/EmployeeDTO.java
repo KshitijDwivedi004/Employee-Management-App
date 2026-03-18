@@ -20,9 +20,6 @@ import java.math.BigDecimal;
 @Builder
 public class EmployeeDTO {
 
-    /**
-     * Present on edit requests; null on create.
-     */
     private Long id;
 
     @NotBlank(message = "Name is required")
