@@ -1,0 +1,76 @@
+# ============================================================
+#  Git Ignore Configuration for Employee Management Application
+# ============================================================
+
+# --- Build and Compilation ---
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+
+# --- IDE and Editor ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+.factorypath
+
+# --- Spring Boot ---
+.mvn/
+mvnw
+mvnw.cmd
+application.properties.local
+
+# --- Testing ---
+*.log
+test-results/
+coverage/
+.junit.*.db
+
+# --- Database and Local Development ---
+*.db
+*.sqlite
+*.h2.db
+local/
+
+# --- Environment Variables ---
+.env
+.env.local
+.env.*.local
+
+# --- OS-specific files ---
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# --- Node modules (if using frontend build tools) ---
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# --- Gradle (if applicable) ---
+.gradle/
+gradle-wrapper.jar
+
+# --- Maven ---
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn.timer.properties
+.mvn.batch.properties
