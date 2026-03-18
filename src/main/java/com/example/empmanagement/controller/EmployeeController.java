@@ -25,9 +25,9 @@ import java.util.List;
  *  GET  /employees              → list all
  *  GET  /employees/new          → show blank add form
  *  POST /employees              → save new employee
- *  GET  /employees/edit/{id}    → show pre-filled edit form
- *  POST /employees/update/{id}  → apply update
- *  GET  /employees/delete/{id}  → delete and redirect
+ *  GET  /employees/{id}/edit    → show pre-filled edit form
+ *  PUT  /employees/{id}         → apply update
+ *  DELETE /employees/{id}       → delete and redirect
  *  GET  /employees/search       → JSON search for jQuery (REST)
  */
 @Controller
@@ -107,9 +107,9 @@ public class EmployeeController {
     // UPDATE — Show pre-filled form / handle submission
     // ----------------------------------------------------------------
 
-    @GetMapping("/edit/{id}")
+    @GetMapping("/{id}/edit")
     public String showEditForm(@PathVariable Long id, Model model) {
-        log.debug("GET /employees/edit/{}", id);
+        log.debug("GET /employees/{}/edit", id);
         Employee employee = employeeService.getEmployeeById(id);
 
         // Map entity → DTO so the form stays decoupled from the entity
@@ -123,11 +123,11 @@ public class EmployeeController {
 
         model.addAttribute("employeeDTO", dto);
         model.addAttribute("formTitle", "Edit Employee");
-        model.addAttribute("formAction", "/employees/update/" + id);
+        model.addAttribute("formAction", "/employees/" + id);
         return "employee-form";
     }
 
-    @PostMapping("/update/{id}")
+    @PutMapping("/{id}")
     public String updateEmployee(
             @PathVariable Long id,
             @Valid @ModelAttribute("employeeDTO") EmployeeDTO dto,
@@ -138,7 +138,7 @@ public class EmployeeController {
         if (result.hasErrors()) {
             log.debug("Validation failed on update id={}: {} errors", id, result.getErrorCount());
             model.addAttribute("formTitle", "Edit Employee");
-            model.addAttribute("formAction", "/employees/update/" + id);
+            model.addAttribute("formAction", "/employees/" + id);
             return "employee-form";
         }
 
@@ -150,7 +150,7 @@ public class EmployeeController {
         } catch (IllegalArgumentException ex) {
             result.rejectValue("email", "email.duplicate", ex.getMessage());
             model.addAttribute("formTitle", "Edit Employee");
-            model.addAttribute("formAction", "/employees/update/" + id);
+            model.addAttribute("formAction", "/employees/" + id);
             return "employee-form";
         }
 
@@ -161,9 +161,9 @@ public class EmployeeController {
     // DELETE
     // ----------------------------------------------------------------
 
-    @GetMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public String deleteEmployee(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        log.debug("GET /employees/delete/{}", id);
+        log.debug("DELETE /employees/{}", id);
         Employee employee = employeeService.getEmployeeById(id); // throws 404 if missing
         employeeService.deleteEmployee(id);
         redirectAttributes.addFlashAttribute("successMessage",

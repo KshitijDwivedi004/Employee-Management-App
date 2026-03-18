@@ -130,42 +130,61 @@ class EmployeeControllerTest {
     }
 
     // ----------------------------------------------------------------
-    // GET /employees/edit/{id}
+    // GET /employees/{id}/edit
     // ----------------------------------------------------------------
 
     @Test
-    @DisplayName("GET /employees/edit/{id} returns pre-filled form")
+    @DisplayName("GET /employees/{id}/edit returns pre-filled form")
     void showEditForm_found_returns200() throws Exception {
         given(employeeService.getEmployeeById(1L)).willReturn(sampleEmployee);
 
-        mockMvc.perform(get("/employees/edit/1"))
+        mockMvc.perform(get("/employees/1/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("employee-form"))
                 .andExpect(model().attributeExists("employeeDTO"));
     }
 
     @Test
-    @DisplayName("GET /employees/edit/{id} with unknown ID surfaces error view")
+    @DisplayName("GET /employees/{id}/edit with unknown ID surfaces error view")
     void showEditForm_notFound_surfacesError() throws Exception {
         given(employeeService.getEmployeeById(99L))
                 .willThrow(new ResourceNotFoundException("Employee", "id", 99L));
 
-        mockMvc.perform(get("/employees/edit/99"))
+        mockMvc.perform(get("/employees/99/edit"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("error"));
     }
 
     // ----------------------------------------------------------------
-    // GET /employees/delete/{id}
+    // PUT /employees/{id}
     // ----------------------------------------------------------------
 
     @Test
-    @DisplayName("GET /employees/delete/{id} redirects after deletion")
+    @DisplayName("PUT /employees/{id} with valid data redirects to list")
+    void updateEmployee_validData_redirects() throws Exception {
+        given(employeeService.updateEmployee(eq(1L), any(EmployeeDTO.class))).willReturn(sampleEmployee);
+
+        mockMvc.perform(put("/employees/1")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .param("name",       "Arjun Sharma")
+                .param("email",      "arjun@example.com")
+                .param("department", "Engineering")
+                .param("salary",     "90000.00"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/employees"));
+    }
+
+    // ----------------------------------------------------------------
+    // DELETE /employees/{id}
+    // ----------------------------------------------------------------
+
+    @Test
+    @DisplayName("DELETE /employees/{id} redirects after deletion")
     void deleteEmployee_redirects() throws Exception {
         given(employeeService.getEmployeeById(1L)).willReturn(sampleEmployee);
         willDoNothing().given(employeeService).deleteEmployee(1L);
 
-        mockMvc.perform(get("/employees/delete/1"))
+        mockMvc.perform(delete("/employees/1"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/employees"));
     }

@@ -111,16 +111,19 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group btn-group-sm" role="group">
-                                                <a href="/employees/edit/${emp.id}"
+                                                <a href="/employees/${emp.id}/edit"
                                                    class="btn btn-outline-primary action-btn edit-btn"
                                                    title="Edit ${emp.name}">
                                                     <i class="bi bi-pencil"></i>
                                                 </a>
-                                                <button onclick="deleteEmployee(${emp.id}, '${emp.name}')"
-                                                        class="btn btn-outline-danger action-btn delete-btn"
-                                                        title="Delete ${emp.name}">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
+                                                <form action="/employees/${emp.id}" method="post" class="d-inline js-delete-form" data-employee-name="${emp.name}">
+                                                    <input type="hidden" name="_method" value="DELETE" />
+                                                    <button type="submit"
+                                                            class="btn btn-outline-danger action-btn delete-btn"
+                                                            title="Delete ${emp.name}">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -241,10 +244,13 @@
                     '<td style="text-align: right;"><span class="fw-semibold text-success">&#8377;' + parseFloat(emp.salary).toLocaleString('en-IN', {minimumFractionDigits: 2}) + '</span></td>' +
                     '<td class="text-center">' +
                     '<div class="btn-group btn-group-sm" role="group">' +
-                    '<a href="/employees/edit/' + emp.id + '" class="btn btn-outline-primary action-btn edit-btn">' +
+                    '<a href="/employees/' + emp.id + '/edit" class="btn btn-outline-primary action-btn edit-btn">' +
                     '<i class="bi bi-pencil"></i></a>' +
-                    '<button onclick="deleteEmployee(' + emp.id + ', \'' + escapeHtml(emp.name) + '\')" class="btn btn-outline-danger action-btn delete-btn">' +
+                    '<form action="/employees/' + emp.id + '" method="post" class="d-inline js-delete-form" data-employee-name="' + escapeHtml(emp.name) + '">' +
+                    '<input type="hidden" name="_method" value="DELETE" />' +
+                    '<button type="submit" class="btn btn-outline-danger action-btn delete-btn">' +
                     '<i class="bi bi-trash"></i></button>' +
+                    '</form>' +
                     '</div>' +
                     '</td>' +
                     '</tr>'
@@ -260,12 +266,13 @@
         location.reload();
     }
 
-    // Delete employee with confirmation modal
-    function deleteEmployee(id, name) {
-        if (confirm('Are you sure you want to delete ' + escapeHtml(name) + '?\n\nThis action cannot be undone.')) {
-            window.location.href = '/employees/delete/' + id;
+    // Confirm delete before submitting the form
+    $(document).on('submit', '.js-delete-form', function (e) {
+        const employeeName = $(this).data('employee-name') || 'this employee';
+        if (!confirm('Are you sure you want to delete ' + employeeName + '?\n\nThis action cannot be undone.')) {
+            e.preventDefault();
         }
-    }
+    });
 
     // Escape HTML to prevent XSS
     function escapeHtml(text) {

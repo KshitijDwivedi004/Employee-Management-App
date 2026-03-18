@@ -84,7 +84,7 @@ src/main/webapp/WEB-INF/views/
 | GET    | `/employees`               | List all employees       |
 | GET    | `/employees/new`           | Show add form            |
 | POST   | `/employees`               | Save new employee        |
-| GET    | `/employees/edit/{id}`     | Show edit form           |
-| POST   | `/employees/update/{id}`   | Update employee          |
-| GET    | `/employees/delete/{id}`   | Delete employee          |
+| GET    | `/employees/{id}/edit`     | Show edit form           |
+| PUT    | `/employees/{id}`          | Update employee          |
+| DELETE | `/employees/{id}`          | Delete employee          |
 | GET    | `/employees/search?keyword=` | Live search (JSON)    |

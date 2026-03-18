@@ -43,6 +43,10 @@
                                novalidate="true"
                                class="needs-validation">
 
+                        <c:if test="${employeeDTO.id != null}">
+                            <input type="hidden" name="_method" value="PUT" />
+                        </c:if>
+
                         <!-- Name -->
                         <div class="mb-4">
                             <label for="name" class="form-label fw-semibold mb-2">
